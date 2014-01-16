@@ -93,15 +93,27 @@ Section comp.
     Qed.
 
     (* It's possible to extract the value from a fully detiministic computation *)
-    Definition is_computational_val A (c : Comp A)
-    : is_computational c -> {a | computes_to c a }.
+    Fixpoint is_computational_val A (c : Comp A) {struct c}
+    : is_computational c -> { a | computes_to c a }.
     Proof.
-      intros H; induction c; apply is_computational_inv in H; intuition.
-      - eexists; constructor.
-      - destruct X0.
-        exists (proj1_sig (X _ (H1 _ c1))).
-      econstructor; eauto.
-      exact (proj2_sig (X _ (H1 _ c1))).
+      refine match c as c' return is_computational c' -> { a | computes_to c' a } with
+               | Return _ v => fun _ => exist _ v _
+               | Pick _ _ => fun H => match is_computational_inv H : False with end
+               | Bind _ _ x f => fun H => let H' := is_computational_inv H in
+                                          let x' := is_computational_val _ _ (proj1 H') in
+                                          let x'' := is_computational_val _ _ (proj2 H' _ (proj2_sig x')) in
+                                          exist _ (proj1_sig x'') _
+
+             end;
+      repeat match goal with
+               | [ H := _ |- _ ] => clearbody H
+             end;
+      clear is_computational_val;
+      abstract (
+          destruct_head_hnf sig;
+          econstructor;
+          try eassumption
+        ).
     Defined.
 
   End is_computational.

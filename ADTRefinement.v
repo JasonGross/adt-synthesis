@@ -112,6 +112,24 @@ Inductive refineADT (A B : ADT) : Prop :=
 Arguments refineMutator / .
 Arguments refineObserver / .
 
+Check bind_bind.
+Print Bind.
+Add Parametric Morphism A B C : (fun ca cb f => @Bind A C ca (fun a => @Bind B C (cb a) f))
+    with signature
+    (@refine A)
+      ==> (pointwise_relation _ (@refine B))
+      ==> (pointwise_relation _ (@refine C))
+      ==> (@refine C)
+      as refine_bind_bind.
+Proof.
+  intros.
+  unfold pointwise_relation in *.
+  setoid_rewrite_hyp.
+  apply refine_bind; [ reflexivity | intro ].
+  apply refine_bind; [ reflexivity | intro ].
+  auto.
+Qed.
+
 Global Instance refineADT_PreOrder : PreOrder refineADT.
 Proof.
   split; compute in *.
@@ -130,7 +148,10 @@ Proof.
     (abs := fun z => (z' <- abs' z; abs z')%comp)
     (mutatorMap := mutMap' ∘ mutMap)
     (observerMap := obsMap' ∘ obsMap);
-    unfold id, compose; simpl in *; intros;
+    unfold id, compose; simpl in *; intros.
+    autorewrite with refine_monad.
+    setoid_rewrite_hyp.
+    setoid_rewrite mutH'.
     interleave_autorewrite_refine_monad_with setoid_rewrite_hyp.
 Qed.
 

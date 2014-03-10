@@ -30,15 +30,17 @@ Section MethodRefinement.
        new rep --------------> new rep
                    new mutator
 >>  *)
-
+Print mutatorMethodType.
   Definition refineMutator
-             (Dom : Type)
-             (oldMutator : mutatorMethodType oldRep Dom)
-             (newMutator : mutatorMethodType newRep Dom)
+             (oldMutCtx oldObsCtx : Context)
+             (newMutCtx newObsCtx : Context)
+             oldIdx newIdx
+             (oldMutator : mutatorMethodType oldRep oldMutCtx oldObsCtx oldIdx)
+             (newMutator : mutatorMethodType newRep newMutCtx newObsCtx newIdx)
     := forall r_o r_n n, r_o ≃ r_n ->
          refineBundled `[r_o' <- oldMutator r_o n;
-                 {r_n | r_o' ≃ r_n} ]`
-                (newMutator r_n n).
+                          {r_n | r_o' ≃ r_n} ]`
+                       (newMutator r_n n).
 
   (** Refinement of an observer method: the computation produced by
    an observer [newObserver] on any new state [r_n] related to an old
@@ -74,10 +76,8 @@ Notation "c ↝ v" := (computes_to c v) (at level 70).
 
 Inductive refineADT : ADT -> ADT -> Prop :=
 | refinesADT :
-    forall repA mutatorIndexA observerIndexA
-           B
+    forall A B
            mutatorMap observerMap
-           mutatorMethodsA observerMethodsA
            SiR,
       (forall idx : mutatorIndexA, @refineMutator
                      repA (Rep B) SiR

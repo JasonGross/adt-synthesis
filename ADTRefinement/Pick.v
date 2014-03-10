@@ -7,25 +7,25 @@ Set Implicit Arguments.
 (** Every spec is trivially implementable using [Pick]. *)
 Section pick.
   Variable rep : Type.
-  Variable mutatorMethodIndex : Type.
-  Variable observerMethodIndex : Type.
-  Variable mutatorMethodSpecs : mutatorMethodIndex -> mutatorMethodSpec rep.
-  Variable observerMethodSpecs : observerMethodIndex -> observerMethodSpec rep.
+  Variable mutatorMethodContext : Context.
+  Variable observerMethodContext : Context.
+  Variable mutatorMethodSpecs : forall name, @mutatorMethodSpec rep mutatorMethodContext observerMethodContext name.
+  Variable observerMethodSpecs : forall name, @observerMethodSpec rep mutatorMethodContext observerMethodContext name.
 
   Local Obligation Tactic := econstructor; eauto.
 
   Program Definition pickImpl : ADT :=
     {|
       Rep := rep;
-      MutatorIndex := mutatorMethodIndex;
-      ObserverIndex := observerMethodIndex;
+      MutatorContext := mutatorMethodContext;
+      ObserverContext := observerMethodContext;
       UnbundledMutatorMethods idx :=
         fun r x =>
-          { r' : rep
-          | mutatorMethodSpecs idx r x r'}%comp;
+          { r' : rep * cod _
+          | mutatorMethodSpecs idx r x (fst r') (snd r')}%comp;
       UnbundledObserverMethods idx :=
         fun r n =>
-          { n' : nat
+          { n' : cod _
           | observerMethodSpecs idx r n n'}%comp
     |}.
 

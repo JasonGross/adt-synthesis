@@ -13,14 +13,16 @@ Section MethodRefinement.
 
   Notation "ro ≃ rn" := (BiR ro rn) (at level 70).
 
-  (** Refinement of a mutator method: the values of the computation
-      produced by applying a new mutator method [newMutator] to any new
-      state [r_n] related to an old state [r_o] by the bisimulation
-      relation [BiR] are related by [BiR] to some value produced by
-      the corresponding old mutator on [r_o]. Related values
-      are taken to related values (with the new mutator potentially
+  (** Refinement of a method: the values of the computation, produced
+      by applying a new method [newMethod] to any new state [r_n]
+      related to an old state [r_o] by the bisimulation relation
+      [BiR], are related by [BiR] to some value produced by the
+      corresponding old method on [r_o].  The input values must be
+      equal across a specified equality of types. Related values are
+      taken to related values (with the new method potentially
       producing more deterministic computations). That is, the
       following diagram commutes:
+
 <<
                    old mutator
        old rep --------------> old rep
@@ -30,42 +32,18 @@ Section MethodRefinement.
        new rep --------------> new rep
                    new mutator
 >>  *)
-Print mutatorMethodType.
-  Definition refineMutator
-             (oldMutCtx oldObsCtx : Context)
-             (newMutCtx newObsCtx : Context)
+
+  Definition refineMethod
+             (oldCtx newCtx : Context)
              oldIdx newIdx
-             (oldMutator : mutatorMethodType oldRep oldMutCtx oldObsCtx oldIdx)
-             (newMutator : mutatorMethodType newRep newMutCtx newObsCtx newIdx)
+             (Hdom : @dom newCtx newIdx = @dom oldCtx oldIdx)
+             (Hcod : cod oldIdx = cod newIdx)
+             (oldMethod : methodType oldRep oldCtx oldIdx)
+             (newMethod : methodType newRep newCtx newIdx)
     := forall r_o r_n n, r_o ≃ r_n ->
-         refineBundled `[r_o' <- oldMutator r_o n;
-                          {r_n | r_o' ≃ r_n} ]`
-                       (newMutator r_n n).
-
-  (** Refinement of an observer method: the computation produced by
-   an observer [newObserver] on any new state [r_n] related to an old
-   state [r_o] by the bisimulation relation [BiR] should be a refinement
-   of the computation produced by the old observer [oldObserver] on
-   [r_n].  That is, the following diagram should commute:
-<<
-                  old observer
-       old rep --------------> ℕ
-          |                      ∥
-      BiR |                      ∥ id
-          ↓                      ∥
-       new rep --------------> ℕ
-                  new observer
->>
-   *)
-
-  Definition refineObserver
-             (Dom Cod : Type)
-             (oldObserver : observerMethodType oldRep Dom Cod)
-             (newObserver : observerMethodType newRep Dom Cod)
-    := forall r_o r_n n, r_o ≃ r_n ->
-         refineBundled (oldObserver r_o n)
-                (newObserver r_n n).
-
+         refineBundled `[r_o' <- oldMethod r_o (Hdom # n);
+                          {r_n' | fst r_o' ≃ fst r_n' /\ Hcod # snd r_o' = snd r_n'}]`
+                       (newMethod r_n n).
 End MethodRefinement.
 
 Notation "c ↝ v" := (computes_to c v) (at level 70).
@@ -77,33 +55,19 @@ Notation "c ↝ v" := (computes_to c v) (at level 70).
 Inductive refineADT : ADT -> ADT -> Prop :=
 | refinesADT :
     forall A B
-           mutatorMap observerMap
+           methodMap
            SiR,
-      (forall idx : mutatorIndexA, @refineMutator
-                     repA (Rep B) SiR
-                     (MutatorDom B (mutatorMap idx))
-                     (MutatorMethods
-                        {| Rep := repA;
-                           UnbundledMutatorMethods := mutatorMethodsA;
-                           UnbundledObserverMethods := observerMethodsA
-                        |}
-                        idx)
-                     (MutatorMethods B (mutatorMap idx)))
-      -> (forall idx : observerIndexA, @refineObserver
-                     repA (Rep B) SiR
-                     (ObserverDom B (observerMap idx))
-                     (ObserverCod B (observerMap idx))
-                     (ObserverMethods {| Rep := repA;
-                                         UnbundledMutatorMethods := mutatorMethodsA;
-                                         UnbundledObserverMethods := observerMethodsA
-                                      |} idx)
-                     (ObserverMethods B (observerMap idx)))
-      -> refineADT {| Rep := repA;
-                      UnbundledMutatorMethods := mutatorMethodsA;
-                      UnbundledObserverMethods := observerMethodsA
-                   |} B.
+      (forall idx,
+         exists (Hdom : dom (methodMap idx) = dom idx)
+                (Hcod : cod idx = cod (methodMap idx)),
+           @refineMethod
+             (Rep A) (Rep B) SiR
+             (MethodNames A) (MethodNames B)
+             idx (methodMap idx)
+             Hdom Hcod
+             (Methods A idx) (Methods B (methodMap idx)))
+      -> refineADT A B.
 
-(** We should always just unfold [refineMutator] and [refineObserver]
-    into [refine], so that we can rewrite with lemmas about [refine]. *)
-Arguments refineMutator / .
-Arguments refineObserver / .
+(** We should always just unfold [refineMethod] into [refine], so that
+    we can rewrite with lemmas about [refine]. *)
+Arguments refineMethod / .

@@ -16,10 +16,16 @@ Section BinOpSpec.
   Global Arguments add s n / m.
 
   (* Specification for adding an element *)
-  Definition add_spec : mutatorMethodSpec multiset
-    := fun m x m' => forall k, m' k = (add m x) k.
+  Print methodSpec.
+  Local Instance multiset_context : Context
+    := {| names := bool;
+          dom is_add := if is_add then nat else unit;
+          cod is_add := if is_add then unit else nat |}.
 
-  Arguments add_spec m x m' / .
+  Definition add_spec : methodSpec multiset _ true
+    := fun m x m' _ => forall k, m' k = (add m x) k.
+
+  Arguments add_spec m x m' / _.
 
   Variable opSpec : nat -> nat -> Prop.
   Variable defaultSpec : nat -> Prop.
@@ -36,8 +42,8 @@ Section BinOpSpec.
   (* The observer must satisfy one of the above two behaviors,
      depending on whether the set is empty or not. *)
   Definition bin_op_spec
-  : observerMethodSpec multiset
-    := fun m _ n => empty_spec m n \/ nonempty_spec m n .
+  : methodSpec multiset _ false
+    := fun m _ m' n => empty_spec m n \/ nonempty_spec m n .
 
   Arguments empty_spec m n / .
   Arguments nonempty_spec m n / .
@@ -45,9 +51,9 @@ Section BinOpSpec.
 
   Definition NatBinOpSpec
   : ADT
-    := pickImpl (fun _ : unit => add_spec)
-                (fun _ : unit => bin_op_spec).
-
+    := @pickImpl multiset
+                 multiset_context
+                 (fun is_add : bool => if is_add as is_add return _ then add_spec else bin_op_spec).
 End BinOpSpec.
 
 Definition NatLower : ADT

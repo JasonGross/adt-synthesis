@@ -10,54 +10,29 @@ Local Open Scope type_scope.
 (** Type of a context *)
 Definition Build_ADTContext
            (rep : Type)
-           (mutCtx obsCtx : Context)
+           (indices : Context)
 : Context :=
-  {| names := @names mutCtx + @names obsCtx;
-     dom idx := rep *
-                match idx with
-                  | inl mIdx => dom mIdx
-                  | inr oIdx => dom oIdx
-                end;
-     cod idx := match idx with
-                  | inl mIdx => rep * cod mIdx
-                  | inr oIdx => cod oIdx
-                end |}.
+  {| names := names;
+     dom idx := rep * dom idx;
+     cod idx := rep * cod idx |}.
 
-(** Type of a mutator method *)
-Definition mutatorMethodTypeUnbundled (Ty : Type)
-           (mutCtx obsCtx : Context)
-           (idx : @names mutCtx)
+(** Type of a method *)
+Definition methodTypeUnbundled (Ty : Type)
+           (indices : Context)
+           (idx : names)
            (* we give a [Context] here so typeclass resolution can pick it up *)
-           (ctx := Build_ADTContext Ty mutCtx obsCtx)
+           (ctx := Build_ADTContext Ty indices)
   := Ty    (* Initial model *)
      -> dom idx (* Actual argument*)
-     -> Comp (Ty * cod idx) (* Final Model *).
-
-(** Type of an obeserver method *)
-Definition observerMethodTypeUnbundled (Ty : Type)
-           (mutCtx obsCtx : Context)
-           (idx : @names obsCtx)
-           (* we give a [Context] here so typeclass resolution can pick it up *)
-           (ctx := Build_ADTContext Ty mutCtx obsCtx)
-  := Ty    (* Initial model *)
-     -> dom idx (* Actual argument*)
-     -> Comp (cod idx) (* Return value *).
+     -> Comp (Ty * cod idx) (* Final Model and return value *).
 
 (** Type of a mutator method bundled with its context *)
-Definition mutatorMethodType (Ty : Type)
-           (mutCtx obsCtx : Context)
-           (idx : @names mutCtx)
+Definition methodType (Ty : Type)
+           (indices : Context)
+           (idx : names)
   := Ty    (* Initial model *)
      -> dom idx (* Actual argument*)
      -> BundledComp (Ty * cod idx) (* Final Model *).
-
-(** Type of an obeserver method *)
-Definition observerMethodType (Ty : Type)
-           (mutCtx obsCtx : Context)
-           (idx : @names obsCtx)
-  := Ty    (* Initial model *)
-     -> dom idx (* Actual argument*)
-     -> BundledComp (cod idx). (* Return value *)
 
 (** Interface of an ADT *)
 Record ADT :=
@@ -65,39 +40,21 @@ Record ADT :=
     Rep : Type;
     (** The representation type of the ADT **)
 
-    MutatorContext : Context;
-    (** The index set of mutators *)
+    MethodNames : Context;
+    (** The index set of methods *)
 
-    ObserverContext : Context;
-    (** The index set of observers *)
+    ADTContext : Context := Build_ADTContext Rep MethodNames;
 
-    ADTContext : Context := Build_ADTContext Rep MutatorContext ObserverContext;
-
-    UnbundledMutatorMethods :
-      forall idx : @names MutatorContext,
-        Rep -> dom idx -> @Comp ADTContext (Rep * cod idx);
-    (** Mutator method implementations *)
-
-    UnbundledObserverMethods :
-      forall idx : @names ObserverContext,
-        Rep -> dom idx -> @Comp ADTContext (cod idx)
-    (** Observer method implementations *)
-
+    UnbundledMethods : forall idx, methodTypeUnbundled Rep MethodNames idx
+    (** Method implementations *)
   }.
+
+Global Existing Instance ADTContext.
 
 Definition ADTLookupContext (A : ADT) : LookupContext
   := {| LContext := ADTContext A;
-        lookup idx := match idx with
-                        | inl mIdx => fun state_value =>
-                                        UnbundledMutatorMethods A mIdx (fst state_value) (snd state_value)
-                        | inr oIdx => fun state_value =>
-                                        UnbundledObserverMethods A oIdx (fst state_value) (snd state_value)
-                      end |}.
+        lookup idx state_value := UnbundledMethods A idx (fst state_value) (snd state_value) |}.
 
-Definition MutatorMethods (A : ADT) (i : @names (MutatorContext A))
-: mutatorMethodType (Rep A) (MutatorContext A) (ObserverContext A) i
-  := fun m x => ``[ UnbundledMutatorMethods A i m x with ADTLookupContext A ]`` .
-
-Definition ObserverMethods (A : ADT) (i : @names (ObserverContext A))
-: observerMethodType (Rep A) (MutatorContext A) (ObserverContext A) i
-  := fun m x => ``[ UnbundledObserverMethods A i m x with ADTLookupContext A ]``.
+Definition Methods (A : ADT) (i : names)
+: methodType (Rep A) (MethodNames A) i
+  := fun m x => ``[ UnbundledMethods A i m x with ADTLookupContext A ]`` .

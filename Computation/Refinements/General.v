@@ -242,4 +242,13 @@ Section general_refine_lemmas.
     econstructor; eauto.
   Qed.
 
+  Lemma refineBundledEquiv_pick_fst_snd_eq {ctx1 ctx2} A B x y
+  : refineBundledEquiv ``[ { v : A * B | x = fst v /\ y = snd v } with ctx1 ]``
+                       ``[ ret (x, y) with ctx2 ]``.
+  Proof. t_refine. Qed.
+
+
+  Definition refineEquiv_pick_fst_snd_eq {ctx1 ctx2}
+  : forall A B x y, refineEquiv { v : A * B | _ } (ret (x, y))
+    := @refineBundledEquiv_pick_fst_snd_eq ctx1 ctx2.
 End general_refine_lemmas.

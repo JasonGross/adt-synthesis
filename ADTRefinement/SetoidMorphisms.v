@@ -4,16 +4,11 @@ Require Export ADTRefinement.Core.
 Generalizable All Variables.
 Set Implicit Arguments.
 
-Instance refineMutator_refl rep Dom
-: Reflexive (@refineMutator rep rep eq Dom).
+Print refineMethod.
+Instance refineMethod_refl rep ctx idx
+: Reflexive (@refineMethod rep rep eq ctx ctx idx idx eq_refl eq_refl).
 Proof.
-  intro; simpl; intros; subst; econstructor; eauto.
-Qed.
-
-Instance refineObserver_refl rep Dom Cod
-: Reflexive (@refineObserver rep rep eq Dom Cod).
-Proof.
-  intro; simpl; intros; subst; reflexivity.
+  intro; simpl; intros; subst; econstructor; destruct_head prod; eauto.
 Qed.
 
 Global Instance refineADT_PreOrder : PreOrder refineADT.
@@ -22,9 +17,39 @@ Proof.
   - intro x; destruct x.
     econstructor 1 with
     (SiR := @eq Rep)
-      (mutatorMap := @id MutatorIndex)
-      (observerMap := @id ObserverIndex)
-      (B := {| Rep := Rep |});
+      (methodMap := @id names);
+      unfold id; simpl;
+      intro; repeat eexists eq_refl;
+      intros; subst; simpl.
+    etransitivity_context.
+
+    Definition refineEquiv_pick_fst_snd_eq_split {ctx1 ctx2} A B x
+    : refineEquiv { v : A * B | _ } (ret (fst x, snd x))
+      := @refineBundledEquiv_pick_fst_snd_eq ctx1 ctx2 A B _ _.
+    Definition refine_pick_fst_snd_eq_split {ctx1 ctx2} A B x
+    : refine { v : A * B | _ } (ret (fst x, snd x))
+      := proj1 (@refineBundledEquiv_pick_fst_snd_eq ctx1 ctx2 A B _ _).
+    let ctx1 := match goal with |- @refine _ ?ctx1 ?ctx2 _ _ => constr:(ctx1) end in
+    let ctx2 := match goal with |- @refine _ ?ctx1 ?ctx2 _ _ => constr:(ctx2) end in
+    pose proof (@refine_pick_fst_snd_eq_split ctx1 ctx2 Rep (cod idx)).
+    eapply refine_bind; [ reflexivity | intro; apply H ].
+    Undo.
+    setoid_rewrite H.
+
+intro.
+    setoid_rewrite H.
+
+    reflexivity.
+    specialize (r a).
+    rewrite r.
+    setoid_rewrite r.
+    apply
+    setoid_rewrite r.
+
+    inversion_by computes_to_inv.
+    unfold
+
+
       unfold id;
       try reflexivity.
   - intros x y z H H'.

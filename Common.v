@@ -381,6 +381,8 @@ Definition forall_relation4 {A : Type} {B : A -> Type}
 Definition pointwise_relation4 {A B C D E : Type} (R : relation E) :=
   pointwise_relation A (@pointwise_relation3 B C D E R).
 
+Notation "p # x" := (@eq_rect Type _ (fun T => T) x _ p) (right associativity, at level 65, only parsing).
+
 Axiom IsHProp : Type -> Type.
 Existing Class IsHProp.
 Instance : forall A, IsHProp (IsHProp A).

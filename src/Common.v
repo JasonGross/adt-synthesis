@@ -3,6 +3,10 @@ Require Export Setoid RelationClasses Program Morphisms.
 
 Global Set Implicit Arguments.
 Global Generalizable All Variables.
+(** Compatibility between trunk and 8.4 *)
+Global Set Asymmetric Patterns.
+Global Arguments Exc / .
+(****************************************)
 
 (** Test if a tactic succeeds, but always roll-back the results *)
 Tactic Notation "test" tactic3(tac) :=

@@ -2,6 +2,7 @@
 Require Import Coq.Setoids.Setoid Coq.Program.Program Coq.Program.Wf Coq.Arith.Wf_nat.
 
 Set Implicit Arguments.
+Global Set Asymmetric Patterns.
 
 Section wf.
   Section wf_prod.

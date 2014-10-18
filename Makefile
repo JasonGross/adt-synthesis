@@ -69,7 +69,6 @@ SRC_MODULES    := \
 	QueryStructure/Refinements/AdditionalMorphisms \
 	QueryStructure/Refinements/AdditionalFlatMapLemmas \
 	QueryStructure/Refinements/flattenCompListProperties \
-	QueryStructure/Refinements/ConstraintChecksRefinements \
 	QueryStructure/Refinements/ListImplementation/ListQueryRefinements \
 	QueryStructure/Refinements/ListImplementation/ListInsertRefinements \
 	QueryStructure/Refinements/ListImplementation/ListQueryStructureRefinements \

@@ -1,5 +1,6 @@
 Generalizable All Variables.
 Set Implicit Arguments.
+Global Set Asymmetric Patterns.
 
 Require Import List String Arith.
 Require Import Common.

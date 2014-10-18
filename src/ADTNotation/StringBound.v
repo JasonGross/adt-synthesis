@@ -13,7 +13,7 @@ Section IndexBound.
     { ibound :> nat;
       boundi : nth_error Bound ibound = Some a}.
 
-  Global Instance IndexBound_head (a : A) (Bound : list A)
+  Fail Global Instance IndexBound_head (a : A) (Bound : list A)
   : IndexBound a (a :: Bound) :=
     {| ibound := 0;
        boundi := eq_refl|}.

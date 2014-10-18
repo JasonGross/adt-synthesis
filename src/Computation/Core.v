@@ -2,6 +2,8 @@ Require Import String Ensembles.
 Require Import Common.
 Require Export Computation.Notations.
 
+Global Set Asymmetric Patterns.
+
 Inductive Comp : Type -> Type :=
 | Return : forall A, A -> Comp A
 | Bind : forall A B, Comp A -> (A -> Comp B) -> Comp B

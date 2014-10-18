@@ -1,5 +1,6 @@
 (** * Definition of a [comp]-based non-computational CFG parser *)
 Require Import Coq.Lists.List Coq.Program.Program Coq.Program.Wf Coq.Arith.Wf_nat Coq.Arith.Compare_dec Coq.Classes.RelationClasses Coq.Strings.String.
+Require Import PeanoNat.
 Require Import Parsers.ContextFreeGrammar Parsers.Specification.
 Require Import Common Common.ilist Common.Wf.
 
@@ -223,8 +224,8 @@ Section recursive_descent_parser.
                            (proj1_sig x')
                            (match pf, proj2_sig x' with
                               | or_introl H0, or_introl H1 => or_introl (transitivity H1 H0)
-                              | or_introl H0, or_intror H1 => or_introl (transitivity (R := le) (Le.le_n_S _ _ (NPeano.Nat.eq_le_incl _ _ (f_equal Length H1))) H0)
-                              | or_intror H0, or_introl H1 => or_introl (transitivity (R := le) H1 (NPeano.Nat.eq_le_incl _ _ (f_equal Length H0)))
+                              | or_introl H0, or_intror H1 => or_introl (transitivity (R := le) (Le.le_n_S _ _ (Nat.eq_le_incl _ _ (f_equal Length H1))) H0)
+                              | or_intror H0, or_introl H1 => or_introl (transitivity (R := le) H1 (Nat.eq_le_incl _ _ (f_equal Length H0)))
                               | or_intror H0, or_intror H1 => or_intror (transitivity H1 H0)
                             end)))).
             specialize (parse_production_from_split_list' (f split) (pat0 :: pat1 :: pats)).
@@ -417,8 +418,8 @@ Section recursive_descent_parser.
                            (proj1_sig x')
                            (match H, proj2_sig x' with
                               | or_introl H0, or_introl H1 => or_introl (transitivity H1 H0)
-                              | or_introl H0, or_intror H1 => or_introl (transitivity (R := le) (Le.le_n_S _ _ (NPeano.Nat.eq_le_incl _ _ (f_equal (Length String) H1))) H0)
-                              | or_intror H0, or_introl H1 => or_introl (transitivity (R := le) H1 (NPeano.Nat.eq_le_incl _ _ (f_equal (Length String) H0)))
+                              | or_introl H0, or_intror H1 => or_introl (transitivity (R := le) (Le.le_n_S _ _ (Nat.eq_le_incl _ _ (f_equal (Length String) H1))) H0)
+                              | or_intror H0, or_introl H1 => or_introl (transitivity (R := le) H1 (Nat.eq_le_incl _ _ (f_equal (Length String) H0)))
                               | or_intror H0, or_intror H1 => or_intror (transitivity H1 H0)
                             end)))).
       pose proof (map f (map (@proj1_sig _ _) ls)).
@@ -757,7 +758,7 @@ Section example_parse_string_grammar.
   Local Ltac t :=
     solve [ repeat t'' ].
 
-  Local Hint Resolve NPeano.Nat.lt_lt_add_l NPeano.Nat.lt_lt_add_r NPeano.Nat.lt_add_pos_r NPeano.Nat.lt_add_pos_l : arith.
+  Local Hint Resolve Nat.lt_lt_add_l Nat.lt_lt_add_r Nat.lt_add_pos_r Nat.lt_add_pos_l : arith.
 
   Definition brute_force_splitter
   : forall (str : string_stringlike) (pat : production Ascii.ascii),
@@ -779,7 +780,7 @@ Section example_parse_string_grammar.
     revert str.
     induction pats; simpl in *; intros str.
     { (** We only get one thing in the list *)
-      refine (exist _ ((exist _ ((exist _ str _)::nil) _)::nil) _).
+      refine (exist _ ((exist _ ((exist _ str _)::nil) _)::nil) _); shelve_unifiable.
       simpl; auto with arith. }
     { pose (make_all_single_splits str) as single_splits.
       pose proof (map (@proj1_sig _ _) single_splits).

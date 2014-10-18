@@ -3,8 +3,8 @@ Require Import Coq.Strings.String Coq.Lists.List Coq.Program.Program.
 Require Export Parsers.StringLike.
 
 Set Implicit Arguments.
-Local Set Boolean Equality Schemes.
-Local Set Decidable Equality Schemes.
+(*Local Set Boolean Equality Schemes.
+Local Set Decidable Equality Schemes.*)
 
 Delimit Scope string_like_scope with string_like.
 

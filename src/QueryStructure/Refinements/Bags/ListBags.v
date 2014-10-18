@@ -10,14 +10,14 @@ Section ListBags.
           {TUpdateTerm : Type}
           (star: TSearchTerm)
           (bid : TUpdateTerm)
-          (bfind_matcher: TSearchTerm -> TItem -> bool)
-          (bupdate_transform : TUpdateTerm -> TItem -> TItem)
-          (find_star: forall (i: TItem), bfind_matcher star i = true).
+          (bfind_matcher': TSearchTerm -> TItem -> bool)
+          (bupdate_transform' : TUpdateTerm -> TItem -> TItem)
+          (find_star: forall (i: TItem), bfind_matcher' star i = true).
 
   Definition ListAsBag_bfind
              (container: list TItem)
              (search_term: TSearchTerm) :=
-    List.filter (bfind_matcher search_term) container.
+    List.filter (bfind_matcher' search_term) container.
 
   Definition ListAsBag_binsert
              (container: list TItem)
@@ -27,20 +27,20 @@ Section ListBags.
   Definition ListAsBag_bcount
              (container: list TItem)
              (search_term: TSearchTerm) :=
-    List.fold_left (fun acc x => acc + if (bfind_matcher search_term x) then 1 else 0) container 0.
+    List.fold_left (fun acc x => acc + if (bfind_matcher' search_term x) then 1 else 0) container 0.
 
   Definition ListAsBag_bdelete
              (container : list TItem)
              (search_term : TSearchTerm) :=
-    List.partition (bfind_matcher search_term) container.
+    List.partition (bfind_matcher' search_term) container.
 
   Definition ListAsBag_bupdate
              (container   : list TItem)
              (search_term : TSearchTerm)
              (update_term : TUpdateTerm) :=
-    (snd (List.partition (bfind_matcher search_term) container))
-      ++ List.map (bupdate_transform update_term)
-      (fst (List.partition (bfind_matcher search_term)
+    (snd (List.partition (bfind_matcher' search_term) container))
+      ++ List.map (bupdate_transform' update_term)
+      (fst (List.partition (bfind_matcher' search_term)
                            container)).
 
   Definition ListBag_RepInv (_ : list TItem) := True.
@@ -61,13 +61,13 @@ Section ListBags.
   Lemma List_BagFindStar :
     BagFindStar ListBag_RepInv ListAsBag_bfind id star.
   Proof.
-    intros; unfold ListBag_RepInv;
+    intros; unfold ListBag_RepInv; hnf;
     induction container; simpl;
     [ | rewrite find_star, IHcontainer]; trivial.
   Qed.
 
   Lemma List_BagFindCorrect :
-    BagFindCorrect ListBag_RepInv ListAsBag_bfind bfind_matcher id.
+    BagFindCorrect ListBag_RepInv ListAsBag_bfind bfind_matcher' id.
   Proof.
     firstorder.
   Qed.
@@ -75,16 +75,16 @@ Section ListBags.
   Require Import Omega.
   Lemma List_BagCountCorrect_aux :
     forall (container: list TItem) (search_term: TSearchTerm) default,
-      length (List.filter (bfind_matcher search_term) container) + default =
+      length (List.filter (bfind_matcher' search_term) container) + default =
       List.fold_left
         (fun (acc : nat) (x : TItem) =>
-           acc + (if bfind_matcher search_term x then 1 else 0))
+           acc + (if bfind_matcher' search_term x then 1 else 0))
         container default.
   Proof.
     induction container; intros.
 
     + trivial.
-    + simpl; destruct (bfind_matcher search_term a);
+    + simpl; destruct (bfind_matcher' search_term a);
       simpl; rewrite <- IHcontainer; omega.
   Qed.
 
@@ -97,14 +97,14 @@ Section ListBags.
   Qed.
 
   Lemma List_BagDeleteCorrect :
-    BagDeleteCorrect ListBag_RepInv ListAsBag_bfind bfind_matcher id ListAsBag_bdelete.
+    BagDeleteCorrect ListBag_RepInv ListAsBag_bfind bfind_matcher' id ListAsBag_bdelete.
   Proof.
     firstorder.
   Qed.
 
   Lemma List_BagUpdateCorrect :
     BagUpdateCorrect ListBag_RepInv ListBag_ValidUpdate
-                     ListAsBag_bfind bfind_matcher id bupdate_transform ListAsBag_bupdate.
+                     ListAsBag_bfind bfind_matcher' id bupdate_transform' ListAsBag_bupdate.
   Proof.
     firstorder.
   Qed.
@@ -114,8 +114,8 @@ Section ListBags.
     {|
       bempty            := nil;
       bstar             := star;
-      bfind_matcher     := bfind_matcher;
-      bupdate_transform := bupdate_transform;
+      bfind_matcher     := bfind_matcher';
+      bupdate_transform := bupdate_transform';
 
       benumerate := id;
       bfind      := ListAsBag_bfind;

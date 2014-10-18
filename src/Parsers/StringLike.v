@@ -1,7 +1,10 @@
 (** * Definition of Context Free Grammars *)
 Require Import Coq.Strings.String Coq.Lists.List Coq.Program.Program.
 Require Import Coq.Setoids.Setoid Coq.Classes.Morphisms.
+Require Import PeanoNat.
 Require Import Omega.
+
+Arguments Antisymmetric A eqA {equ} R.
 
 Set Implicit Arguments.
 Local Set Boolean Equality Schemes.
@@ -36,7 +39,7 @@ Notation "[[ x ]]" := (@Singleton _ _ x) : string_like_scope.
 Infix "++" := (@Concat _ _) : string_like_scope.
 Infix "=s" := (@bool_eq _ _) (at level 70, right associativity) : string_like_scope.
 
-Local Hint Extern 0 => match goal with H : S _ = 0 |- _ => destruct (NPeano.Nat.neq_succ_0 _ H) end.
+Local Hint Extern 0 => match goal with H : S _ = 0 |- _ => destruct (Nat.neq_succ_0 _ H) end.
 
 Definition string_stringlike : string_like Ascii.ascii.
 Proof.
@@ -107,7 +110,7 @@ Proof.
   hnf.
   rewrite <- Length_correct.
   case_eq (s2 =s (Empty _));
-  destruct (NPeano.Nat.eq_dec (Length s2) 0);
+  destruct (Nat.eq_dec (Length s2) 0);
   str_le_append_t.
 Qed.
 
@@ -117,6 +120,6 @@ Proof.
   hnf.
   rewrite <- Length_correct.
   case_eq (s1 =s Empty _);
-  destruct (NPeano.Nat.eq_dec (Length s1) 0);
+  destruct (Nat.eq_dec (Length s1) 0);
   str_le_append_t.
 Qed.

@@ -23,7 +23,7 @@ Section IndexBound.
            {sB' : IndexBound a Bound}
   : IndexBound a (a' :: Bound) :=
     {| ibound := S ibound;
-       boundi := boundi |}.
+       boundi := (boundi : nth_error (a'::Bound) (S ibound) = _) |}.
 
   Definition tail_IndexBound
            (a : A) (Bound : list A)

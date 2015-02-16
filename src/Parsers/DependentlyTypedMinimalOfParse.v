@@ -372,7 +372,7 @@ Section recursive_descent_parser.
               => first [ specialize (H (transitivity (str_le1_append _ _ _) H'))
                        | specialize (H (transitivity (str_le2_append _ _ _) H')) ]
             | _ => progress hnf in *
-            | [ |- ?T ] => (not constr_eq False T); solve [ eauto with minimal_instance_db ] (* work around bugged tactic universe successor anomaly *)
+            | [ |- ?T ] => solve [ eauto with minimal_instance_db ] (* work around bugged tactic universe successor anomaly *)
             | [ x : _ |- @sigT ?A _ ]
               => exists (MinParseNonTerminal x : A)
             | [ |- @sigT ?A _ ]
@@ -478,12 +478,15 @@ Please report." *)
 
         Local Obligation Tactic := idtac.
 
-        Start Profiling.
-        Time Global Program Instance minimal_parser_dependent_types_extra_data
+        Global Program Instance minimal_parser_dependent_types_extra_data
                (*(split_list_complete : forall str0 valid it its str pf, @split_list_completeT str0 valid valid it its str pf (split_string_for_production it its str))*)
         : @parser_dependent_types_extra_dataT _ String G
-          := {| cons_success := cons_success |}.
-        Next Obligation. t. Defined.
+          := {| cons_success := _ |}.
+        Next Obligation. admit. (* success *) Undo. simpl in *. admit. (* Toplevel input, characters 15-20:
+Anomaly: Cannot take the successor of a non variable universe:
+(maybe a bugged tactic).
+Please report. *)
+t. Defined.
         Next Obligation. t. Defined.
         Next Obligation. t. Defined.
         Next Obligation. t. Defined.

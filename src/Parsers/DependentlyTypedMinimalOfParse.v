@@ -1,8 +1,7 @@
 (** * Definition of a [comp]-based non-computational CFG parser *)
-Require Import Coq.Lists.List Coq.Program.Program Coq.Program.Wf Coq.Arith.Wf_nat Coq.Arith.Compare_dec Coq.Classes.RelationClasses Coq.Strings.String.
+Require Import Coq.Strings.String.
 Require Import Parsers.ContextFreeGrammar Parsers.Specification Parsers.DependentlyTyped Parsers.MinimalParse.
-Require Import Parsers.WellFoundedParse Parsers.ContextFreeGrammarProperties.
-Require Import Common Common.ilist Common.Wf.
+Require Import Parsers.ContextFreeGrammarProperties.
 
 Set Implicit Arguments.
 
@@ -15,11 +14,18 @@ Section recursive_descent_parser.
           (String : string_like CharType)
           (G : grammar CharType).
   Context {premethods : parser_computational_predataT}.
-  Variable orig_methods : @parser_computational_dataT' CharType String premethods.
-  Variable gen_state : forall (prod : production CharType) s, split_stateT prod s.
 
   Let P : string -> Prop
     := fun p => is_valid_nonterminal_name initial_nonterminal_names_data p = true.
+
+  Let mp_parse_nonterminal_name str0 valid str nonterminal_name
+    := { p' : minimal_parse_of_name String G initial_nonterminal_names_data is_valid_nonterminal_name remove_nonterminal_name str0 valid str nonterminal_name & Forall_parse_of_item P (parse_of_item_name__of__minimal_parse_of_name p') }.
+
+  Goal False.
+    clear -mp_parse_nonterminal_name.
+    subst P.
+    simpl in *. admit.
+
 
   Let p_parse_item s it
     := { p' : parse_of_item String G s it & Forall_parse_of_item P p' }.
@@ -36,8 +42,7 @@ Section recursive_descent_parser.
     := { p' : minimal_parse_of_production String G initial_nonterminal_names_data is_valid_nonterminal_name remove_nonterminal_name str0 valid str prod & Forall_parse_of_production P (parse_of_production__of__minimal_parse_of_production p') }.
   Let mp_parse str0 valid str prods
     := { p' : minimal_parse_of String G initial_nonterminal_names_data is_valid_nonterminal_name remove_nonterminal_name str0 valid str prods & Forall_parse_of P (parse_of__of__minimal_parse_of p') }.
-  Let mp_parse_nonterminal_name str0 valid str nonterminal_name
-    := { p' : minimal_parse_of_name String G initial_nonterminal_names_data is_valid_nonterminal_name remove_nonterminal_name str0 valid str nonterminal_name & Forall_parse_of_item P (parse_of_item_name__of__minimal_parse_of_name p') }.
+          admit.
 
   Definition split_parse_of_production {str it its}
              (p : p_parse_production str (it::its))
@@ -482,7 +487,22 @@ Please report." *)
                (*(split_list_complete : forall str0 valid it its str pf, @split_list_completeT str0 valid valid it its str pf (split_string_for_production it its str))*)
         : @parser_dependent_types_extra_dataT _ String G
           := {| cons_success := _ |}.
-        Next Obligation. admit. (* success *) Undo. simpl in *. admit. (* Toplevel input, characters 15-20:
+        Next Obligation.
+          exfalso.
+          do 1 match goal with H : _ |- _ => clear H end.
+          clear -mp_parse_nonterminal_name.
+          subst P.
+
+          clear.
+          simpl in *; admit.
+          admit.
+          do 1 match goal with H : _
+          Ltac don n :=
+            do n
+          match goal with
+            | [ H : _ |- _ ] => idtac H; simpl in H; admit; []
+          end.
+ admit. (* success *) Undo. simpl in *. admit. (* Toplevel input, characters 15-20:
 Anomaly: Cannot take the successor of a non variable universe:
 (maybe a bugged tactic).
 Please report. *)
